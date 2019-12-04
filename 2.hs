@@ -2,14 +2,16 @@ import qualified Data.Text as Text --(map, take, drop, splitAt)
 import Data.List
 run f = do
     str <- readFile "input2.txt"
-    return f str
+    return (f str)
 
 f1 str = f 12 2 str
 
+f :: Int -> Int -> String -> Int
 f noun verb str = let ints = toInts str in
-    return . head $ readOp 0 $ (head ints):noun:verb:(drop 3 ints)
+    head $ readOp 0 $ (head ints):noun:verb:(drop 3 ints)
 
-f2 str = [f noun verb str | noun <- [0..99], verb <- [0..99]]
+
+f2 str = head [100 * noun + verb | noun <- [0..99], verb <- [0..99], (f noun verb str) == 19690720]
 
 type Ptr = Int
 type Op = Int -> Int -> Int
