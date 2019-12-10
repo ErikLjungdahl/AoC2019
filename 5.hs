@@ -2,7 +2,7 @@ import qualified Data.Text as Text --(map, take, drop, splitAt)
 import Data.List
 run f = do
     str <- readFile "input5.txt"
-    f str
+    return $ f str
 {-
 f1 str = f 12 2 str
 
@@ -13,7 +13,7 @@ f noun verb str = let ints = toInts str in
 
 f2 str = head [100 * noun + verb | noun <- [0..99], verb <- [0..99], (f noun verb str) == 19690720]
 -}
-f5 str = readOp 0 ((toInts str) ++ [0])
+f5 str = readOp 0 (toInts str, [])
 
 type Ptr = Int
 type Op = Int -> Int -> Int
@@ -21,13 +21,15 @@ type Op = Int -> Int -> Int
 toInts :: String -> [Int]
 toInts s = map (read . Text.unpack) $ Text.splitOn (Text.singleton ',') (Text.pack s)
 
-readOp :: Ptr -> [Int] -> IO [Int]
-readOp p is =
+readOp :: Ptr -> ([Int], [Int]) -> ([Int], [Int])
+readOp p (is,output) =
     let eval :: [Int] -> Ptr -> Op -> Ptr -> Int
-        eval (0:0:_) p1 op p2 = (is !! p1) `op` (is !! p2)
-        eval (0:1:_) p1 op p2 = (is !! p1) `op` p2
-        eval (1:0:_) p1 op p2 = p1         `op` (is !! p2)
-        eval (1:1:_) p1 op p2 = p1         `op` p2
+        eval list p1 op p2 | p1 >= 0 && p2 >= 0 = eval' list p1 op p2
+                           | otherwise = 0
+        eval' (0:0:_) p1 op p2 = (is !! p1) `op` (is !! p2)
+        eval' (0:1:_) p1 op p2 = (is !! p1) `op` p2
+        eval' (1:0:_) p1 op p2 = p1         `op` (is !! p2)
+        eval' (1:1:_) p1 op p2 = p1         `op` p2
         putAt :: Int -> Ptr -> [Int]
         putAt i pr = (take pr is) ++ (i:(drop (pr+1) is))
         (o:os) = drop p is
@@ -35,25 +37,12 @@ readOp p is =
             in i':modOp (i `div` 10)
         inp = 1 -- Input is always 1?
     in case (modOp o, os) of
-        (1:modes ,p1:p2:pres:_) -> do
-            putStrLn "Addition"
-            readOp (p+4) (putAt (eval modes p1 (+) p2) pres)
-        (2:modes ,p1:p2:pres:_) -> do
-            putStrLn "Multiplication"
-            readOp (p+4) (putAt (eval modes p1 (*) p2) pres)
-        (3:modes ,ps:_ )      -> do
-            putStrLn "Input"
-            readOp (p+2) (putAt inp ps)
-        (4:modes ,pr:_)      -> do
-            -- let v = if head modes == 1 then pr else is !!
-            let v = is !!+ pr
-            putStrLn $ "Output Pointer: " ++ show pr
-            putStrLn $ "Length of list: " ++ show (length is)
-            print v
-            putStrLn $ "end"
-            readOp (p+2) is
+        (1:modes ,p1:p2:pres:_) -> readOp (p+4) ((putAt (eval modes p1 (+) p2) pres),output)
+        (2:modes ,p1:p2:pres:_) -> readOp (p+4) ((putAt (eval modes p1 (*) p2) pres),output)
+        (3:modes ,ps:_ )        -> readOp (p+2) ((putAt inp ps),output)
+        (4:modes ,pr:_)         -> readOp (p+2) (is, (is !!+ pr):output)
 
-        (9:9:modes,_) -> return is
+        (9:9:modes,_) -> (is, output)
 
 (!!+) :: [a] -> Int -> a
 []     !!+ _ = error "Index to large"
