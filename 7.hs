@@ -4,16 +4,21 @@ run f = do
     str <- readFile "input7.txt"
     return $ f str
 
-f7   str = maximum $
+f7 str = maximum $
             map (\list -> foldr (\phase inp ->
-                                head $ snd $ readOpWithInput [phase,inp] 0 (toInts str, []))
+                                last $ snd $ readOpWithInput [phase,inp] 0 (toInts str, []))
                                 0 list)
                 (permutations [0..4])
-f7_2   str = maximum $
-            map (\list -> foldr (\phase inp ->
-                                head $ snd $ readOpWithInput [phase,inp] 0 (toInts str, []))
-                                0 list)
-                (permutations [0..4])
+f7_2 str = maximum $ map (f7_2' str) (permutations [5..9])
+f7_2' str phases = let
+    a = snd (readOpWithInput (phaseA:0:init e) 0 (toInts str, []))
+    b = snd (readOpWithInput (phaseB:a) 0 (toInts str, []))
+    c = snd (readOpWithInput (phaseC:b) 0 (toInts str, []))
+    d = snd (readOpWithInput (phaseD:c) 0 (toInts str, []))
+    e = snd (readOpWithInput (phaseE:d) 0 (toInts str, []))
+    (phaseA:phaseB:phaseC:phaseD:phaseE:_) = phases
+        in last e
+
 
 type Ptr = Int
 type Op = Int -> Int -> Int
@@ -46,7 +51,7 @@ readOpWithInput inp = readOp
                 (1:0:modes ,p1:p2:pres:_) -> readOp (p+4) ((putAt (eval modes p1 (+) p2) pres),output)
                 (2:0:modes ,p1:p2:pres:_) -> readOp (p+4) ((putAt (eval modes p1 (*) p2) pres),output)
                 (3:0:modes ,ps:_ )        -> readOpWithInput (tail inp) (p+2) ((putAt (head inp) ps),output)
-                (4:0:modes ,pr:_)         -> readOp (p+2) (is, (is !! pr):output)
+                (4:0:modes ,pr:_)         -> readOp (p+2) (is, output ++ [is !! pr])
 
                 (5:0:modes, p1:pj:_) -> jumpIf modes (0 /=) p1 pj
                 (6:0:modes, p1:pj:_) -> jumpIf modes (0 ==) p1 pj
