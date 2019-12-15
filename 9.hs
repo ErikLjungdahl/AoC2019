@@ -7,8 +7,14 @@ run f = do
 
 f1 str = head $ snd $ readOpWithInput inp 0 0 (toIntsInf0s str, [])
     where inp = (1:1:[])
+f2 str = last $ snd $ readOpWithInput inp 0 0 (toIntsInf0s str, [])
+    where inp = (2:[])
 
 ftest = toIntsInf0s
+
+main = do
+    res <- run f2
+    print res
 
 type Ptr = Integer
 type Op = Integer -> Integer -> Integer
@@ -70,3 +76,4 @@ readOpWithInput inp rel = readOp
 
                 -- NOP
                 (9:9:modes,_) -> (is, output)
+                (0:modes,_) -> (is, output)
