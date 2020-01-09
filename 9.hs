@@ -1,8 +1,9 @@
 import qualified Data.Text as Text --(map, take, drop, splitAt)
+import qualified Data.Text.IO as Text --(map, take, drop, splitAt)
 import Data.List hiding ((!!), take, drop)
 import Prelude hiding ((!!), take, drop)
 run f = do
-    str <- readFile "input9.txt"
+    str <- Text.readFile "input9.txt"
     return $ f str
 
 f1 str = head $ snd $ readOpWithInput inp 0 0 (toIntsInf0s str, [])
@@ -20,8 +21,8 @@ type Ptr = Integer
 type Op = Integer -> Integer -> Integer
 
 
-toIntsInf0s :: String -> [Integer]
-toIntsInf0s s = (map (read . Text.unpack) $ Text.splitOn (Text.singleton ',') (Text.pack s)) ++ repeat 0
+toIntsInf0s :: Text.Text -> [Integer]
+toIntsInf0s s = (map (read . Text.unpack) $ Text.splitOn (Text.singleton ',') (s)) ++ repeat 0
 
 (!!) = genericIndex
 take = genericTake
